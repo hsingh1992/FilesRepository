@@ -1,0 +1,121 @@
+************************************************************************
+*Heading
+3D simple shear (one element) 
+************************************************************************
+**
+** This input file is for simple shear of a single element in the 
+**  2-3-plane.   
+**
+** Created: Nov 2022
+**
+************************************************************************
+**
+** Note: Abaqus has no built-in units. It is the
+** user's responsibility to use compatible units.
+**
+**       Units used in this problem, SI:
+**                  Length               --- meters - m
+**                  Time                 --- seconds - s
+**                  Mass                 --- kilograms - kg
+**                  Force                --- Newton - N
+**                  Stress               --- Pascal - Pa = N/(m)^2 
+**                  Energy               --- Joule - J = N*m
+**                  Angle                --- radians
+**
+************************************************************************
+**			Parameters
+************************************************************************
+*Parameter
+**
+** Size of single cube element (m)
+l = 0.001
+**
+** Young's Modulus
+E = 200.e9
+**
+** Poisson's Ratio
+xnu = 0.3
+**
+** total shear strain
+gamma = 0.05
+**
+** shear strain rate (1/s) - not relavant in linear elasticity
+**gammadot = 0.01
+**
+** displacement
+disp = gamma*l
+** velocity (m/s) - Either velocity or displacment boundary conditions can be used
+**vel = l*gammadot
+**
+** time parameters
+** total time (s)
+**tf = gamma/gammadot
+tf = 1
+** initial time step (s)
+ti = tf/10.0
+** max time step (s)
+tmax = tf/10.0
+** min time step (s)
+tmin = tf/100.0
+**
+************************************************************************
+** 			Model definition
+************************************************************************
+*node, nset=nall
+1,0.,0.,0.
+2,<l>,0.,0.
+3,<l>,<l>,0.
+4,0.,<l>,0.
+5,0.,0.,<l>
+6,<l>,0.,<l>
+7,<l>,<l>,<l>
+8,0.,<l>,<l>
+*element, type=C3D8H, elset=elall
+1,1,2,3,4,5,6,7,8
+*nset, nset=bot
+1,2,3,4
+*nset, nset=top
+5,6,7,8
+************************************************************************
+**                     Material definition
+************************************************************************
+*solid section, elset=elall, material=mat
+*material, name=mat
+************************************************************************
+*user material, constants = 2
+<E>,<xnu>
+**1000.0, 0.3
+**
+************************************************************************
+**             		Step definition
+************************************************************************
+*Step, Name=Load
+*Static
+<ti>,<tf>,<tmin>,<tmax>
+*** by defualt the boundary tyoe is displacement. 
+** bot, 1,3 constrins all 3 degress of freedom
+*boundary  
+bot,1,3
+top,1
+top,3
+** top is given velocity in 2nd degree of freedom
+*boundary, type=displacement
+top,2,2,<disp>
+****************
+****************  OUTPUTS
+****************
+****************  Field output
+****************
+*Output, field, number interval=20
+*node output
+u,rf
+*element output
+s,e,sdv
+****************
+****************  History output 
+****************
+** sdv is state dependent variables
+*Output, history
+*Element output, elset=elall
+s23,e23,sdv
+*END STEP
